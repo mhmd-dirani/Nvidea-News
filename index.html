@@ -9,6 +9,11 @@
       font-family: Arial, sans-serif;
       padding: 2rem;
       background: #f5f5f5;
+      transition: background 0.3s, color 0.3s;
+    }
+    body.dark {
+      background: #1e1e1e;
+      color: #f5f5f5;
     }
     h1 {
       color: #2c3e50;
@@ -21,6 +26,10 @@
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
+    body.dark .container {
+      background: #2c2c2c;
+      color: white;
+    }
     canvas {
       margin-top: 2rem;
     }
@@ -29,24 +38,40 @@
       padding-bottom: 1rem;
       border-bottom: 1px solid #ddd;
     }
+    .timestamp {
+      font-size: 12px;
+      color: gray;
+      margin-top: 1rem;
+    }
+    .dark-toggle {
+      cursor: pointer;
+      float: right;
+      font-size: 12px;
+    }
   </style>
 </head>
 <body>
   <div class="container">
+    <div class="dark-toggle" onclick="document.body.classList.toggle('dark')">Toggle Dark Mode</div>
     <h1>Nvidia (NVDA) Stock Dashboard</h1>
     <p><strong>Live Price:</strong> <span id="price">Loading...</span></p>
     <p><strong>RSI:</strong> <span id="rsi">Loading...</span></p>
-    <canvas id="priceChart" width="400" height="200"></canvas><h2>Latest News</h2>
-<div id="news"></div>
+    <canvas id="priceChart" width="400" height="200"></canvas>
+    <h2>Latest News</h2>
+    <div id="news"></div>
+    <p class="timestamp">Last updated: <span id="timestamp"></span></p>
+  </div>
 
-  </div>  <script>
+  <script>
     const ALPHA_KEY = 'RZ763012A';
     const POLYGON_KEY = 'l1xeDNLIr3xiPcD_hEHS0yjJ_QDJiY3r';
     const GNEWS_KEY = 'f93208737fa196e9880d33dd52eff044';
 
+    document.getElementById('timestamp').textContent = new Date().toUTCString();
+
     async function fetchPrice() {
       try {
-        const res = await fetch(`https://api.polygon.io/v2/aggs/ticker/NVDA/prev?adjusted=true&apiKey=${POLYGON_KEY}`);
+        const res = await fetch(`https://api.polygon.io/v2/aggs/ticker/NVDA/prev?adjusted=true&apiKey=${POLYGON_KEY}&t=${Date.now()}`);
         const data = await res.json();
         const price = data.results?.[0]?.c;
         if (price) {
@@ -122,5 +147,6 @@
     fetchRSI();
     fetchChartData();
     fetchNews();
-  </script></body>
+  </script>
+</body>
 </html>
