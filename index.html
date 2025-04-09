@@ -46,17 +46,18 @@
 
     async function fetchPrice() {
       try {
-        const res = await fetch(`https://api.polygon.io/v1/last/trade/NVDA?apiKey=${POLYGON_KEY}`);
+        const res = await fetch(`https://api.polygon.io/v1/last/stocks/NVDA?apiKey=${POLYGON_KEY}`);
         const data = await res.json();
-        const price = data?.results?.p;
+        const price = data?.last?.price;
         if (price) {
           document.getElementById('price').textContent = `$${price.toFixed(2)}`;
         } else {
           document.getElementById('price').textContent = 'Unavailable';
+          console.warn('Polygon price format changed or missing.');
         }
       } catch (error) {
         document.getElementById('price').textContent = 'Error';
-        console.error('Polygon price error:', error);
+        console.error('Polygon fetch error:', error);
       }
     }
 
