@@ -42,7 +42,7 @@
   </div>  <script>
     const ALPHA_KEY = 'RZ763012A';
     const FINNHUB_KEY = 'cvqt771r01qp88cnh5q0cvqt771r01qp88cnh5qg';
-    const NEWS_KEY = '820e80716b6346508896e8fb1c103106';
+    const GNEWS_KEY = 'f93208737fa196e9880d33dd52eff044';
 
     async function fetchPrice() {
       const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=NVDA&token=${FINNHUB_KEY}`);
@@ -81,11 +81,8 @@
     }
 
     async function fetchNews() {
-      const proxy = 'https://cors-anywhere.herokuapp.com/';
-      const url = `https://newsapi.org/v2/everything?q=nvidia&language=en&pageSize=5&sortBy=publishedAt&apiKey=${NEWS_KEY}`;
-
       try {
-        const res = await fetch(proxy + url);
+        const res = await fetch(`https://gnews.io/api/v4/search?q=nvidia&lang=en&max=5&token=${GNEWS_KEY}`);
         const data = await res.json();
         const container = document.getElementById('news');
 
