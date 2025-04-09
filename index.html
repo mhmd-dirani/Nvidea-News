@@ -1,82 +1,111 @@
 <!DOCTYPE html><html lang="en">
-    <head>
-      <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <title>Nvidia Stock Tracker</title>
-            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-              <style>
-                  body { font-family: Arial, sans-serif; padding: 2rem; background: #f5f5f5; }
-                      h1 { color: #2c3e50; }
-                          .container { max-width: 800px; margin: auto; background: #fff; padding: 2rem; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-                              canvas { margin-top: 2rem; }
-                                  .news-item { margin: 1rem 0; padding-bottom: 1rem; border-bottom: 1px solid #ddd; }
-                                    </style>
-                                    </head>
-                                    <body>
-                                      <div class="container">
-                                          <h1>Nvidia (NVDA) Stock Dashboard</h1>
-                                              <p><strong>Live Price:</strong> <span id="price">Loading...</span></p>
-                                                  <p><strong>RSI:</strong> <span id="rsi">Loading...</span></p><canvas id="priceChart" width="400" height="200"></canvas>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nvidia Stock Tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      background: #f5f5f5;
+    }
+    h1 {
+      color: #2c3e50;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: #fff;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    canvas {
+      margin-top: 2rem;
+    }
+    .news-item {
+      margin: 1rem 0;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #ddd;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Nvidia (NVDA) Stock Dashboard</h1>
+    <p><strong>Live Price:</strong> <span id="price">Loading...</span></p>
+    <p><strong>RSI:</strong> <span id="rsi">Loading...</span></p>
+    <canvas id="priceChart" width="400" height="200"></canvas><h2>Latest News</h2>
+<div id="news"></div>
 
-                                                  <h2>Latest News</h2>
-                                                  <div id="news"></div>
+  </div>  <script>
+    const ALPHA_KEY = 'RZ763012A';
+    const FINNHUB_KEY = 'cvqt771r01qp88cnh5q0cvqt771r01qp88cnh5qg';
+    const NEWS_KEY = '820e80716b6346508896e8fb1c103106';
 
-                                                    </div>  <script>
-                                                        const ALPHA_KEY = 'RZ763012A';
-                                                            const FINNHUB_KEY = 'cvqt771r01qp88cnh5q0cvqt771r01qp88cnh5qg';
-                                                                const NEWS_KEY = '820e80716b6346508896e8fb1c103106';
+    async function fetchPrice() {
+      const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=NVDA&token=${FINNHUB_KEY}`);
+      const data = await res.json();
+      document.getElementById('price').textContent = `$${data.c.toFixed(2)}`;
+    }
 
-                                                                    async function fetchPrice() {
-                                                                          const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=NVDA&token=${FINNHUB_KEY}`);
-                                                                                const data = await res.json();
-                                                                                      document.getElementById('price').textContent = `$${data.c.toFixed(2)}`;
-                                                                                          }
+    async function fetchRSI() {
+      const res = await fetch(`https://www.alphavantage.co/query?function=RSI&symbol=NVDA&interval=daily&time_period=14&series_type=close&apikey=${ALPHA_KEY}`);
+      const data = await res.json();
+      const rsiValues = Object.values(data['Technical Analysis: RSI']);
+      const latestRSI = parseFloat(rsiValues[0]['RSI']);
+      document.getElementById('rsi').textContent = latestRSI.toFixed(2);
+    }
 
-                                                                                              async function fetchRSI() {
-                                                                                                    const res = await fetch(`https://www.alphavantage.co/query?function=RSI&symbol=NVDA&interval=daily&time_period=14&series_type=close&apikey=${ALPHA_KEY}`);
-                                                                                                          const data = await res.json();
-                                                                                                                const rsiValues = Object.values(data['Technical Analysis: RSI']);
-                                                                                                                      const latestRSI = parseFloat(rsiValues[0]['RSI']);
-                                                                                                                            document.getElementById('rsi').textContent = latestRSI.toFixed(2);
-                                                                                                                                }
+    async function fetchChartData() {
+      const res = await fetch(`https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=NVDA&apikey=${ALPHA_KEY}`);
+      const data = await res.json();
+      const prices = Object.entries(data['Time Series (Daily)']).slice(0, 30).reverse();
+      const labels = prices.map(([date]) => date);
+      const values = prices.map(([_, val]) => parseFloat(val['4. close']));
 
-                                                                                                                                    async function fetchChartData() {
-                                                                                                                                          const res = await fetch(`https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=NVDA&apikey=${ALPHA_KEY}`);
-                                                                                                                                                const data = await res.json();
-                                                                                                                                                      const prices = Object.entries(data['Time Series (Daily)']).slice(0, 30).reverse();
-                                                                                                                                                            const labels = prices.map(([date, _]) => date);
-                                                                                                                                                                  const values = prices.map(([_, val]) => parseFloat(val['4. close']));
+      new Chart(document.getElementById('priceChart'), {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'NVDA Closing Price',
+            data: values,
+            fill: false,
+            borderColor: 'rgba(75, 192, 192, 1)',
+            tension: 0.1
+          }]
+        }
+      });
+    }
 
-                                                                                                                                                                        new Chart(document.getElementById('priceChart'), {
-                                                                                                                                                                                type: 'line',
-                                                                                                                                                                                        data: {
-                                                                                                                                                                                                  labels: labels,
-                                                                                                                                                                                                            datasets: [{
-                                                                                                                                                                                                                        label: 'NVDA Closing Price',
-                                                                                                                                                                                                                                    data: values,
-                                                                                                                                                                                                                                                fill: false,
-                                                                                                                                                                                                                                                            borderColor: 'rgba(75, 192, 192, 1)',
-                                                                                                                                                                                                                                                                        tension: 0.1
-                                                                                                                                                                                                                                                                                  }]
-                                                                                                                                                                                                                                                                                          }
-                                                                                                                                                                                                                                                                                                });
-                                                                                                                                                                                                                                                                                                    }
+    async function fetchNews() {
+      try {
+        const res = await fetch(`https://newsapi.org/v2/everything?q=Nvidia&language=en&sortBy=publishedAt&pageSize=5&apiKey=${NEWS_KEY}`);
+        const data = await res.json();
+        const container = document.getElementById('news');
 
-                                                                                                                                                                                                                                                                                                        async function fetchNews() {
-                                                                                                                                                                                                                                                                                                              const res = await fetch(`https://newsapi.org/v2/everything?q=Nvidia&sortBy=publishedAt&apiKey=${NEWS_KEY}`);
-                                                                                                                                                                                                                                                                                                                    const data = await res.json();
-                                                                                                                                                                                                                                                                                                                          const container = document.getElementById('news');
-                                                                                                                                                                                                                                                                                                                                data.articles.slice(0, 5).forEach(article => {
-                                                                                                                                                                                                                                                                                                                                        const div = document.createElement('div');
-                                                                                                                                                                                                                                                                                                                                                div.className = 'news-item';
-                                                                                                                                                                                                                                                                                                                                                        div.innerHTML = `<strong>${article.title}</strong><br><a href="${article.url}" target="_blank">Read more</a>`;
-                                                                                                                                                                                                                                                                                                                                                                container.appendChild(div);
-                                                                                                                                                                                                                                                                                                                                                                      });
-                                                                                                                                                                                                                                                                                                                                                                          }
+        if (!data.articles || data.articles.length === 0) {
+          container.innerHTML = '<p>No news found. Try again later.</p>';
+          return;
+        }
 
-                                                                                                                                                                                                                                                                                                                                                                              fetchPrice();
-                                                                                                                                                                                                                                                                                                                                                                                  fetchRSI();
-                                                                                                                                                                                                                                                                                                                                                                                      fetchChartData();
-                                                                                                                                                                                                                                                                                                                                                                                          fetchNews();
-                                                                                                                                                                                                                                                                                                                                                                                            </script></body>
-                                                                                                                                                                                                                                                                                                                                                                                            </html>
+        data.articles.forEach(article => {
+          const div = document.createElement('div');
+          div.className = 'news-item';
+          div.innerHTML = `<strong>${article.title}</strong><br><a href="${article.url}" target="_blank">Read more</a>`;
+          container.appendChild(div);
+        });
+      } catch (error) {
+        document.getElementById('news').innerHTML = '<p>Failed to load news.</p>';
+        console.error('News error:', error);
+      }
+    }
+
+    fetchPrice();
+    fetchRSI();
+    fetchChartData();
+    fetchNews();
+  </script></body>
+</html>
