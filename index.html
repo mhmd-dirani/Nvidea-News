@@ -46,14 +46,13 @@
 
     async function fetchPrice() {
       try {
-        const res = await fetch(`https://api.polygon.io/v1/last/stocks/NVDA?apiKey=${POLYGON_KEY}`);
+        const res = await fetch(`https://api.polygon.io/v2/aggs/ticker/NVDA/prev?adjusted=true&apiKey=${POLYGON_KEY}`);
         const data = await res.json();
-        const price = data?.last?.price;
+        const price = data.results?.[0]?.c;
         if (price) {
           document.getElementById('price').textContent = `$${price.toFixed(2)}`;
         } else {
           document.getElementById('price').textContent = 'Unavailable';
-          console.warn('Polygon price format changed or missing.');
         }
       } catch (error) {
         document.getElementById('price').textContent = 'Error';
@@ -62,11 +61,16 @@
     }
 
     async function fetchRSI() {
-      const res = await fetch(`https://www.alphavantage.co/query?function=RSI&symbol=NVDA&interval=daily&time_period=14&series_type=close&apikey=${ALPHA_KEY}`);
-      const data = await res.json();
-      const rsiValues = Object.values(data['Technical Analysis: RSI']);
-      const latestRSI = parseFloat(rsiValues[0]['RSI']);
-      document.getElementById('rsi').textContent = latestRSI.toFixed(2);
+      try {
+        const res = await fetch(`https://www.alphavantage.co/query?function=RSI&symbol=NVDA&interval=daily&time_period=14&series_type=close&apikey=${ALPHA_KEY}`);
+        const data = await res.json();
+        const rsiValues = Object.values(data['Technical Analysis: RSI']);
+        const latestRSI = parseFloat(rsiValues[0]['RSI']);
+        document.getElementById('rsi').textContent = latestRSI.toFixed(2);
+      } catch (error) {
+        document.getElementById('rsi').textContent = 'Unavailable';
+        console.error('RSI fetch error:', error);
+      }
     }
 
     async function fetchChartData() {
