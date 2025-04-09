@@ -81,8 +81,11 @@
     }
 
     async function fetchNews() {
+      const proxy = 'https://cors-anywhere.herokuapp.com/';
+      const url = `https://newsapi.org/v2/everything?q=nvidia&language=en&pageSize=5&sortBy=publishedAt&apiKey=${NEWS_KEY}`;
+
       try {
-        const res = await fetch(`https://newsapi.org/v2/everything?q=Nvidia&language=en&sortBy=publishedAt&pageSize=5&apiKey=${NEWS_KEY}`);
+        const res = await fetch(proxy + url);
         const data = await res.json();
         const container = document.getElementById('news');
 
