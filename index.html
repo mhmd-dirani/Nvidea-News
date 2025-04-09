@@ -41,13 +41,23 @@
 
   </div>  <script>
     const ALPHA_KEY = 'RZ763012A';
-    const FINNHUB_KEY = 'cvqt771r01qp88cnh5q0cvqt771r01qp88cnh5qg';
+    const POLYGON_KEY = 'l1xeDNLIr3xiPcD_hEHS0yjJ_QDJiY3r';
     const GNEWS_KEY = 'f93208737fa196e9880d33dd52eff044';
 
     async function fetchPrice() {
-      const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=NVDA&token=${FINNHUB_KEY}`);
-      const data = await res.json();
-      document.getElementById('price').textContent = `$${data.c.toFixed(2)}`;
+      try {
+        const res = await fetch(`https://api.polygon.io/v2/last/trade/NVDA?apiKey=${POLYGON_KEY}`);
+        const data = await res.json();
+        const price = data?.results?.p;
+        if (price) {
+          document.getElementById('price').textContent = `$${price.toFixed(2)}`;
+        } else {
+          document.getElementById('price').textContent = 'Unavailable';
+        }
+      } catch (error) {
+        document.getElementById('price').textContent = 'Error';
+        console.error('Polygon price error:', error);
+      }
     }
 
     async function fetchRSI() {
